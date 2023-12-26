@@ -10,7 +10,8 @@ import argparse
 parser = argparse.ArgumentParser(description="Generating dictionary for model training")
 parser.add_argument("--question", type=str, default='../preprocessing/data/questions', help="path to GQA question files")
 parser.add_argument("--exp", type=str, default='../preprocessing', help="path to converted explanations")
-parser.add_argument("--save", type=str, default='./', help="path for saving the data")
+parser.add_argument("--pro", type=str, default='./processed_data', help="path to converted programs")
+parser.add_argument("--save", type=str, default='./processed_data', help="path for saving the data")
 args = parser.parse_args()
 
 # convert problematic answer
@@ -82,3 +83,26 @@ with open(os.path.join(args.save, 'exp2idx.json'), 'w') as f:
 with open(os.path.join(args.save, 'ans2idx.json'), 'w') as f:
     json.dump(ans_dict, f)
 torch.save(structure_mapping, os.path.join(args.save, 'structure_mapping.pth'))
+
+# Create program module vocabulary
+pro2idx = {'PAD': 0, 'UNK': 1}
+pro = json.load(open(os.path.join(args.pro, "processed_train_balanced_program.json")))
+counter = {}
+
+for _, v in pro.items():
+    p = v['program']
+    for i in p:
+        for j in i:
+            if j is not None:
+                try:
+                    counter[j] += 1
+                except KeyError:
+                    counter[j] = 1
+
+for k, v in counter.items():
+    if v > 3:
+        idx = len(pro2idx.keys())
+        pro2idx[k] = idx
+
+with open(os.path.join(args.save, 'pro2idx.json'), 'w') as f:
+    json.dump(pro2idx, f)
