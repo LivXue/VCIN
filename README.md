@@ -13,7 +13,7 @@
 1. Download the [GQA Dataset](https://cs.stanford.edu/people/dorarad/gqa/download.html).
 2. Download the [GQA-OOD Dataset](https://github.com/gqa-ood/GQA-OOD)
 3. Download the [bottom-up features](https://github.com/airsplay/lxmert) and unzip it.
-4. Extracting features from the raw tsv files (**Important**: You need to run the code with Linux):
+4. Extracting features from the raw tsv files (**Important**: You need to run the code in Linux):
   ```
   python ./preprocessing/extract_tsv.py --input $TSV_FILE --output $FEATURE_DIR
   ```
@@ -22,7 +22,7 @@
 7. Download our [generated programs]() of the GQA dataset.
 8. (Optional) You can generate programs by yourself following [this project](https://github.com/wenhuchen/Meta-Module-Network).
 
-### Optional Models
+### Models
 We provide four models in `model/model/model.py`.
 
 #### Two baselines:
@@ -49,3 +49,15 @@ To evaluate on the GQA-testdev set or generating submission file for online eval
   python main.py --mode $MODE --anno_dir $GQA_ROOT/question --ood_dir $OOD_ROOT/data --lang_dir ./processed_data --img_dir $FEATURE_DIR/features --weights $CHECKPOINT/model_best.pth --explainable True
   ```
 and set `$MODE` to `eval` or `submission` accordingly.
+
+### Reference
+If you find our paper or code helpful, please cite it as below. Thanks!
+```
+@inproceedings{xue2023variational,
+  title={Variational Causal Inference Network for Explanatory Visual Question Answering},
+  author={Xue, Dizhan and Qian, Shengsheng and Xu, Changsheng},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
+  pages={2515--2525},
+  year={2023}
+}
+```
