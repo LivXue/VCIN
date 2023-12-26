@@ -1,16 +1,10 @@
-import numpy as np
 import os
+import json
+
+import numpy as np
 import torch
 import torch.utils.data as data
-import json
-import threading
-import sys
 
-if sys.version_info >= (3, 0):
-    import queue as Queue
-else:
-    import Queue
-# from transformers import BertTokenizer
 from lxrt.tokenization import BertTokenizer
 
 # convert problematic answer
@@ -35,23 +29,6 @@ ANS_CONVERT = {
 ANS_REMOVED = [
 
 ]
-
-detected_ans = ['yes', 'no', 'dark', 'brown', 'blond', 'blue', 'green', 'yellow', 'black', 'gray', 'white', 'red',
-                'purple', 'light brown', 'light blue', 'silver', 'pink', 'orange', 'tan', 'dark brown', 'beige', 'gold',
-                'cream colored', 'maroon', 'dark blue', 'khaki', 'teal', 'brunette', 'left', 'right', 'large', 'small',
-                'huge', 'little', 'giant', 'tiny', 'young', 'old', 'long', 'short', 'tall']
-
-obj_vocab = dict()
-with open('../preprocessing/data/vg_gqa_imgfeat/objects_vocab.txt') as f:
-    for i, line in enumerate(f):
-        line = line.rstrip('\n')
-        names = line.split(',')
-        if len(names) == 1 or len(names[0].split(' ')) == 1:
-            obj_vocab[i] = names[0]
-        elif len(names[1].split(' ')) == 1:
-            obj_vocab[i] = names[1]
-        else:
-            obj_vocab[i] = names[0]
 
 
 def convert_sents_to_features(sent, max_seq_length, tokenizer):
@@ -201,10 +178,6 @@ class Batch_generator(data.Dataset):
         qid = self.Qid[index]
 
         # merging question and explanation mask for inputs
-        # encode_question = self.tokenizer(question, return_tensors='pt')
-        # text_input = encode_question['input_ids'][0]
-        # token_type = encode_question['token_type_ids'][0]
-        # attention_mask = encode_question['attention_mask'][0]
         text_input, attention_mask, token_type = convert_sents_to_features(question, self.seq_len, self.tokenizer)
 
         text_input = text_input[:self.seq_len]
@@ -256,12 +229,8 @@ class Batch_generator(data.Dataset):
 
                 for i in range(len(exp)):
                     converted_exp[i] = exp[i]
-                    #converted_exp[i, exp[i]] = 1
                     converted_gate[i] = structure_gate[i]
                 valid_mask[:len(exp) + 1] = 1
-
-                #if len(exp) < self.max_exp_len:
-                #    converted_exp[len(exp), 0] = 1
             else:
                 converted_exp = torch.zeros((1))
                 valid_mask = torch.zeros((1))
@@ -284,10 +253,13 @@ class Batch_generator_submission(data.Dataset):
         # selecting top answers
         self.ans2idx = json.load(open(os.path.join(lang_dir, 'ans2idx_all.json')))
         self.exp2idx = json.load(open(os.path.join(lang_dir, 'exp2idx.json')))
+        self.pro2idx = json.load(open(os.path.join(lang_dir, 'pro2idx.json')))
 
         # self.question = json.load(open(os.path.join(que_dir, 'submission_all_questions_clean.json')))
         self.question = json.load(open(os.path.join(que_dir, '{}_questions_clean.json'.format(mode))))
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
+
+        self.program = json.load(open(os.path.join(lang_dir, 'processed_{}_program.json'.format(mode))))
 
         self.init_data()
 
@@ -297,6 +269,8 @@ class Batch_generator_submission(data.Dataset):
         self.Qid = []
         self.objs = []
         self.attrs = []
+        self.pro = []
+        self.pro_adj = []
 
         for qid in self.question.keys():
             # convert question
@@ -309,6 +283,9 @@ class Batch_generator_submission(data.Dataset):
             self.Q.append(cur_Q)
             self.Img.append(cur_img)
             self.Qid.append(qid)
+
+            self.pro.append(self.program[qid]['program'])
+            self.pro_adj.append(torch.tensor(self.program[qid]['adj']))
 
     def __getitem__(self, index):
         question = self.Q[index]
@@ -334,7 +311,22 @@ class Batch_generator_submission(data.Dataset):
         img = np.load(os.path.join(self.img_dir, str(img_id) + '.npy'))
         box = np.load(os.path.join('../preprocessing/data/extracted_features/box', str(img_id) + '.npy'))
 
-        return img, box, text_input.long(), token_type.long(), attention_mask.long(), qid
+        pro = torch.zeros((9, 8), dtype=torch.long)
+        pro_adj = torch.eye(9)
+
+        for i, row in enumerate(self.pro[index]):
+            for j, p in enumerate(row):
+                if p is None:
+                    continue
+                else:
+                    try:
+                        pro[i, j] = self.pro2idx[p]
+                    except KeyError:
+                        pro[i, j] = self.pro2idx['UNK']
+        adj = self.pro_adj[index]
+        pro_adj[:adj.shape[0], :adj.shape[1]] = adj
+
+        return img, box, text_input.long(), token_type.long(), attention_mask.long(), qid, pro, pro_adj
 
     def __len__(self, ):
         return len(self.Img)

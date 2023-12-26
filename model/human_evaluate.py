@@ -9,7 +9,7 @@ import random
 obj_info = json.load(open('../preprocessing/obj_info.json'))
 box_p = '../preprocessing/data/extracted_features/box/'
 que = json.load(open('processed_data/val_balanced_questions_clean.json'))
-model_names = ['REX_LXMERT', 'REX', 'VCIN']
+model_names = ['REX_LXMERT', 'REX', 'VCIN', 'Pro_VCIN']
 exps = ['explanations/explanation_val_{}.json'.format(mname) for mname in model_names]
 exps = [json.load(open(path)) for path in exps]
 #exps[0] = json.load(open("processed_data/converted_explanation_val_balanced.json"))     # for debug
