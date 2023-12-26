@@ -13,14 +13,25 @@
 1. Download the [GQA Dataset](https://cs.stanford.edu/people/dorarad/gqa/download.html).
 2. Download the [GQA-OOD Dataset](https://github.com/gqa-ood/GQA-OOD)
 3. Download the [bottom-up features](https://github.com/airsplay/lxmert) and unzip it.
-4. Extracting features from the raw tsv files (**Important**: You need to run the code with Python 2):
+4. Extracting features from the raw tsv files (**Important**: You need to run the code with Linux):
   ```
-  python2 ./preprocessing/extract_tsv.py --input $TSV_FILE --output $FEATURE_DIR
+  python ./preprocessing/extract_tsv.py --input $TSV_FILE --output $FEATURE_DIR
   ```
 5. We provide the annotations of GQA-REX Dataset in `model/processed_data/converted_explanation_train_balanced.json` and `model/processed_data/converted_explanation_val_balanced.json`.
 6. (Optional) You can construct the GQA-REX Dataset by yourself following [instructions by its authors](https://github.com/szzexpoi/rex).
 7. Download our [generated programs]() of the GQA dataset.
 8. (Optional) You can generate programs by yourself following [this project](https://github.com/wenhuchen/Meta-Module-Network).
+
+### Optional Models
+We provide four models in `model/model/model.py`.
+
+#### Two baselines:
+1. REX-VisualBert is from [this project](https://github.com/szzexpoi/rex).
+2. REX-LXMERT replaces the backbone VisualBert of REX-VisualBert by LXMERT.
+
+#### Two our models (using LXMERT as backbone):
+1. VCIN is proposed in our ICCV 2023 paper "Variational Causal Inference Network for Explanatory Visual Question Answering".
+2. Pro-VCIN is proposed in "Integrating Neural-Symbolic Reasoning with Variational Causal Inference Network for Explanatory Visual Question Answering".
 
 ### Training and Test
 Before training, you need to first generate the dictionary for questions, answers, explanations, and program modules:
