@@ -241,10 +241,7 @@ class ExpGenerator(nn.Module):
 
         return textual_emb.masked_fill(word_mask, 0) + visual_emb + self.position_emb[:, pos_shift:ids.shape[1]+pos_shift]
 
-    def forward(self, pre_words, question_features, img_features, concat_mask, pro_features, pro_mask):
-        mm_features = pro_features
-        #mm_features = torch.cat((question_features, img_features, pro_features), dim=1)
-        concat_mask = pro_mask
+    def forward(self, pre_words, img_features, mm_features, concat_mask):
 
         if self.training:
             #pre_words = torch.max(pre_words, dim=-1)[1]
@@ -253,7 +250,7 @@ class ExpGenerator(nn.Module):
             word_features = self.token_emb(pre_words, img_features)  # self.exp_embed(pre_words)
             seq_len = pre_words.shape[1]
             exp_mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).unsqueeze(0) * (-1e6)
-            exp_mask = exp_mask.to(question_features.device)
+            exp_mask = exp_mask.to(img_features.device)
             for i in range(self.n_layers):
                 word_features, _ = self.trans_layers[i](word_features, exp_mask)
                 att_features, _ = self.cross_layers[i](word_features, mm_features, mm_features,
