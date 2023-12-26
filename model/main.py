@@ -31,8 +31,6 @@ parser.add_argument('--ood_dir', type=str, default='./processed_data', help='Dir
 parser.add_argument('--lang_dir', type=str, default='./processed_data', help='Directory to preprocessed language files')
 parser.add_argument('--img_dir', type=str, default='../preprocessing/data/extracted_features/features', help='Directory to image features')
 parser.add_argument('--bbox_dir', type=str, default='../preprocessing/data/extracted_features/box', help='Directory to bounding box information')
-parser.add_argument('--obj_dir', type=str, default='../preprocessing', help='Directory to object information')
-parser.add_argument('--emb_dir', type=str, default='../preprocessing/data', help='Directory to object/attribution embeddings')
 parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints', help='Directory for saving checkpoint')
 parser.add_argument('--weights', type=str, default='./checkpoints/model_best_2023-11-26 13:25:09.pth', help='Trained model to be loaded (default: None)')
 parser.add_argument('--epoch', type=int, default=12, help='Defining maximal number of epochs')
