@@ -1,0 +1,1 @@
+Download the pretrained model at http://nlp.cs.unc.edu/data/model_LXRT.pth. More details can be found at https://github.com/airsplay/lxmert.
