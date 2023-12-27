@@ -93,7 +93,7 @@ class VisualBert_REX(nn.Module):
         init_language_h = torch.zeros(batch, self.hidden_size).to(device)
         return init_word, init_att_h, init_language_h
 
-    def forward(self, img, box, text_input, token_type, attention_mask, exp=None):
+    def forward(self, img, box, text_input, token_type, attention_mask, exp=None, valid_mask=None, ans=None, structure_gate=None):
         embedding = self.embedding(input_ids=text_input, token_type_ids=token_type, visual_embeds=img)
         visual_mask = torch.ones(len(embedding), self.num_roi).cuda()
         concat_mask = torch.cat((attention_mask, visual_mask,), dim=1)
@@ -168,7 +168,11 @@ class VisualBert_REX(nn.Module):
         output_gate = torch.cat([_ for _ in pred_gate], dim=1)
 
         if self.training:
-            return output_ans, output_sent, output_gate
+            ans_loss = F.cross_entropy(output_ans, ans)
+            exp_loss = exp_generative_loss(output_sent, exp, valid_mask)
+            structure_loss = structure_bce(output_gate, structure_gate)
+            loss = ans_loss + exp_loss + structure_loss
+            return loss, output_ans, output_sent
         else:
             return output_ans, output_sent
 
@@ -213,9 +217,6 @@ class LXMERT_REX(nn.Module):
         # self.att_drop = nn.Dropout(0.2)
         # self.fc_drop = nn.Dropout(0.2)
 
-        self.v0 = nn.Parameter(torch.zeros((1, 36, 2048)))
-        self.b0 = nn.Parameter(torch.zeros((1, 36, 4)))
-
         if self.use_structure:
             self.structure_gate = nn.Linear(self.hidden_size, 1)
             self.structure_mapping = nn.Parameter(torch.load(os.path.join(lang_dir, 'structure_mapping.pth')),
@@ -236,17 +237,12 @@ class LXMERT_REX(nn.Module):
         init_language_h = torch.zeros(batch, self.hidden_size).to(device)
         return init_word, init_att_h, init_language_h
 
-    def forward(self, img, box, text_input, token_type, attention_mask, exp=None):
+    def forward(self, img, box, text_input, token_type, attention_mask, exp=None, valid_mask=None, ans=None, structure_gate=None):
         visual_mask = torch.ones(len(img), self.num_roi).cuda()
-        v00 = self.v0.expand(img.size()[0], -1, -1)
-        b00 = self.b0.expand(img.size()[0], -1, -1)
 
-        feat_seq, cls_feat = self.bert_encoder(input_ids=text_input, token_type_ids=token_type,
+        feat_seq, cls_feat, _ = self.bert_encoder(input_ids=text_input, token_type_ids=token_type,
                                                attention_mask=attention_mask, visual_feats=(img, box),
                                                visual_attention_mask=visual_mask)
-        _, cls_feat0 = self.bert_encoder(input_ids=text_input, token_type_ids=token_type,
-                                         attention_mask=attention_mask, visual_feats=(v00, b00),
-                                         visual_attention_mask=visual_mask)
         que_feat = feat_seq[0]
         visual_feat = feat_seq[1]
 
@@ -305,14 +301,16 @@ class LXMERT_REX(nn.Module):
             x_1 = torch.cat((fuse_feat.sum(1), h_2, prev_word), dim=-1)
 
         output_sent = torch.cat([_.unsqueeze(1) for _ in pred_exp], dim=1)
-        output_ans = F.softmax(self.ans_cls(cls_feat), dim=-1)
+        output_ans = self.ans_cls(cls_feat)
         output_gate = torch.cat([_ for _ in pred_gate], dim=1)
 
         if self.training:
-            output_ans = F.softmax(self.ans_cls(cls_feat + cls_feat0), dim=-1)
-            return output_ans, output_sent, output_gate
+            ans_loss = F.cross_entropy(output_ans, ans)
+            exp_loss = exp_generative_loss(output_sent, exp, valid_mask)
+            structure_loss = structure_bce(output_gate, structure_gate)
+            loss = ans_loss + exp_loss + structure_loss
+            return loss, output_ans, output_sent
         else:
-            output_ans = F.softmax(self.ans_cls(cls_feat + 0.25 * cls_feat0), dim=-1)
             return output_ans, output_sent
 
 
@@ -352,7 +350,7 @@ class VCIN(nn.Module):
         visual_mask = torch.ones(len(img), self.num_roi).to(img.device)
         concat_mask = torch.cat((attention_mask, visual_mask,), dim=1)
 
-        feat_seq, pooled_output, hie_visn_feats = self.bert_encoder(input_ids=text_input, token_type_ids=token_type,
+        feat_seq, pooled_output, _ = self.bert_encoder(input_ids=text_input, token_type_ids=token_type,
                                                                     attention_mask=attention_mask,
                                                                     visual_feats=(img, box),
                                                                     visual_attention_mask=visual_mask)
