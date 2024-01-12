@@ -1,8 +1,8 @@
 # Integrating Neural-Symbolic Reasoning with Variational Causal Inference Network for Explanatory Visual Question Answering
 
-<!-- [Dizhan Xue](https://scholar.google.com/citations?user=V5Aeh_oAAAAJ), [Shengsheng Qian](https://scholar.google.com/citations?user=bPX5POgAAAAJ), and [Changsheng Xu](https://scholar.google.com/citations?user=hI9NRDkAAAAJ).
+[Dizhan Xue](https://scholar.google.com/citations?user=V5Aeh_oAAAAJ), [Shengsheng Qian](https://scholar.google.com/citations?user=bPX5POgAAAAJ), and [Changsheng Xu](https://scholar.google.com/citations?user=hI9NRDkAAAAJ).
 
-**MAIS, Institute of Automation, Chinese Academy of Sciences** -->
+**MAIS, Institute of Automation, Chinese Academy of Sciences**
 
 ![](https://img.shields.io/badge/Status-building-brightgreen)
 ![GitHub stars](https://img.shields.io/github/stars/LivXue/VCIN?color=yellow&label=Stars)
