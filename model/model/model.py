@@ -38,7 +38,7 @@ class VisualBert_REX(nn.Module):
     """
     Baseline method
     """
-    def __init__(self, num_roi=36, nb_answer=2000, nb_vocab=2000, num_step=12, use_structure=True, lang_dir=None):
+    def __init__(self, num_roi=36, nb_answer=2000, nb_vocab=2000, num_step=12, lang_dir=None, args=None, explainable=True):
         super(VisualBert_REX, self).__init__()
         self.nb_vocab = nb_vocab
         self.num_roi = num_roi
@@ -46,7 +46,8 @@ class VisualBert_REX(nn.Module):
         self.num_step = num_step
         self.img_size = 2048
         self.hidden_size = 768
-        self.use_structure = use_structure
+        self.explainable = explainable
+        self.args = args
         base_model = VisualBertModel.from_pretrained('uclanlp/visualbert-vqa-coco-pre')
 
         self.embedding = base_model.embeddings
@@ -73,7 +74,7 @@ class VisualBert_REX(nn.Module):
         # self.att_drop = nn.Dropout(0.2)
         # self.fc_drop = nn.Dropout(0.2)
 
-        if self.use_structure:
+        if self.explainable:
             self.structure_gate = nn.Linear(self.hidden_size, 1)
             self.structure_mapping = nn.Parameter(torch.load(os.path.join(lang_dir, 'structure_mapping.pth')),
                                                   requires_grad=False)
@@ -145,7 +146,7 @@ class VisualBert_REX(nn.Module):
             h_2 = self.language_rnn(x_2, h_2)
             pred_word = F.softmax(self.language_fc(h_2), dim=-1)  # without dropout
 
-            if self.use_structure:
+            if self.explainable:
                 structure_gate = torch.sigmoid(self.structure_gate(h_2))
                 similarity = torch.bmm(h_2.unsqueeze(1), visual_feat.transpose(1, 2)).squeeze(1)
                 similarity = F.softmax(similarity, dim=-1)
@@ -181,7 +182,7 @@ class LXMERT_REX(nn.Module):
     """
     Baseline method based on LXMERT
     """
-    def __init__(self, num_roi=36, nb_answer=2000, nb_vocab=2000, num_step=12, use_structure=True, lang_dir=None):
+    def __init__(self, num_roi=36, nb_answer=2000, nb_vocab=2000, num_step=12, lang_dir=None, args=None, explainable=True):
         super(LXMERT_REX, self).__init__()
         self.nb_vocab = nb_vocab
         self.num_roi = num_roi
@@ -189,7 +190,8 @@ class LXMERT_REX(nn.Module):
         self.num_step = num_step
         self.img_size = 2048
         self.hidden_size = 768
-        self.use_structure = use_structure
+        self.explainable = explainable
+        self.args = args
         base_model = LXRTEncoder(max_seq_length=18)
         base_model.load("lxrt/model")
 
@@ -217,7 +219,7 @@ class LXMERT_REX(nn.Module):
         # self.att_drop = nn.Dropout(0.2)
         # self.fc_drop = nn.Dropout(0.2)
 
-        if self.use_structure:
+        if self.explainable:
             self.structure_gate = nn.Linear(self.hidden_size, 1)
             self.structure_mapping = nn.Parameter(torch.load(os.path.join(lang_dir, 'structure_mapping.pth')),
                                                   requires_grad=False)
@@ -283,7 +285,7 @@ class LXMERT_REX(nn.Module):
             h_2 = self.language_rnn(x_2, h_2)
             pred_word = F.softmax(self.language_fc(h_2), dim=-1)  # without dropout
 
-            if self.use_structure:
+            if self.explainable:
                 structure_gate = torch.sigmoid(self.structure_gate(h_2))
                 similarity = torch.bmm(h_2.unsqueeze(1), visual_feat.transpose(1, 2)).squeeze(1)
                 similarity = F.softmax(similarity, dim=-1)
