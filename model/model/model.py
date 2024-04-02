@@ -164,14 +164,14 @@ class VisualBert_REX(nn.Module):
             x_1 = torch.cat((fuse_feat.sum(1), h_2, prev_word), dim=-1)
 
         output_sent = torch.cat([_.unsqueeze(1) for _ in pred_exp], dim=1)
-        output_ans = F.softmax(self.ans_cls(cls_feat), dim=-1)
+        output_ans = self.ans_cls(cls_feat)
         # output_att = torch.cat([_.unsqueeze(1) for _ in pred_att],dim=1)
         output_gate = torch.cat([_ for _ in pred_gate], dim=1)
 
         if self.training:
             ans_loss = F.cross_entropy(output_ans, ans)
-            exp_loss = exp_generative_loss(output_sent, exp, valid_mask)
-            structure_loss = structure_bce(output_gate, structure_gate)
+            exp_loss = self.args.alpha * exp_generative_loss(output_sent, exp, valid_mask)
+            structure_loss = self.args.beta * structure_bce(output_gate, structure_gate)
             loss = ans_loss + exp_loss + structure_loss
             return loss, output_ans, output_sent
         else:
@@ -308,8 +308,8 @@ class LXMERT_REX(nn.Module):
 
         if self.training:
             ans_loss = F.cross_entropy(output_ans, ans)
-            exp_loss = exp_generative_loss(output_sent, exp, valid_mask)
-            structure_loss = structure_bce(output_gate, structure_gate)
+            exp_loss = self.args.alpha * exp_generative_loss(output_sent, exp, valid_mask)
+            structure_loss = self.args.beta * structure_bce(output_gate, structure_gate)
             loss = ans_loss + exp_loss + structure_loss
             return loss, output_ans, output_sent
         else:
