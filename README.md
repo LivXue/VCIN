@@ -60,4 +60,12 @@ If you find our paper or code helpful, please cite it as below. Thanks!
   pages={2515--2525},
   year={2023}
 }
+
+@article{xue2024integrating,
+  title={Integrating Neural-Symbolic Reasoning With Variational Causal Inference Network for Explanatory Visual Question Answering},
+  author={Xue, Dizhan and Qian, Shengsheng and Xu, Changsheng},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  year={2024},
+  publisher={IEEE}
+}
 ```
