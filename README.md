@@ -31,7 +31,7 @@ We provide four models in `model/model/model.py`.
 
 #### Two our models (using LXMERT as backbone):
 1. VCIN is proposed in our ICCV 2023 paper "Variational Causal Inference Network for Explanatory Visual Question Answering".
-2. Pro-VCIN is proposed in "Integrating Neural-Symbolic Reasoning with Variational Causal Inference Network for Explanatory Visual Question Answering".
+2. Pro-VCIN is proposed in TPAMI 2024 paper "Integrating Neural-Symbolic Reasoning with Variational Causal Inference Network for Explanatory Visual Question Answering".
 
 ### Training and Test
 Before training, you need to first generate the dictionary for questions, answers, explanations, and program modules:
@@ -51,7 +51,7 @@ To evaluate on the GQA-testdev set or generating submission file for online eval
 and set `$MODE` to `eval` or `submission` accordingly.
 
 ### Reference
-If you find our paper or code helpful, please cite it as below. Thanks!
+If you find our papers or code helpful, please cite it as below. Thanks!
 ```
 @inproceedings{xue2023variational,
   title={Variational Causal Inference Network for Explanatory Visual Question Answering},
