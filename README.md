@@ -19,7 +19,7 @@
   ```
 5. We provide the annotations of GQA-REX Dataset in `model/processed_data/converted_explanation_train_balanced.json` and `model/processed_data/converted_explanation_val_balanced.json`.
 6. (Optional) You can construct the GQA-REX Dataset by yourself following [instructions by its authors](https://github.com/szzexpoi/rex).
-7. Download our [generated programs]() of the GQA dataset.
+7. Download our generated programs of the GQA dataset from [Google Drive](https://drive.google.com/drive/folders/1irW8aVOBm0CmOxN6ovVBYlTTQvqn1NLx?usp=sharing).
 8. (Optional) You can generate programs by yourself following [this project](https://github.com/wenhuchen/Meta-Module-Network).
 
 ### Models
