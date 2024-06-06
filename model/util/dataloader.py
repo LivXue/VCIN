@@ -75,12 +75,12 @@ class Batch_generator(data.Dataset):
         self.seq_len = seq_len
         self.explainable = explainable
         # selecting top answers
-        self.ans2idx = json.load(open(os.path.join(lang_dir, 'ans2idx_all.json')))
+        self.ans2idx = json.load(open(os.path.join(lang_dir, 'ans2idx.json')))
         self.exp2idx = json.load(open(os.path.join(lang_dir, 'exp2idx.json')))
         self.pro2idx = json.load(open(os.path.join(lang_dir, 'pro2idx.json')))
 
         if self.mode == 'train' and percentage != 100:
-            self.question = json.load(open(os.path.join(que_dir, 'train_balanced_questions_clean' + str(percentage) + '.json')))
+            self.question = json.load(open(os.path.join(que_dir, 'train_balanced_questions' + str(percentage) + '.json')))
         elif self.mode == 'train_submission':
             self.question = dict()
             for split in ['train_all_0', 'train_all_1', 'train_all_2', 'train_all_3', 'train_all_4', 'train_all_5',
@@ -90,7 +90,7 @@ class Batch_generator(data.Dataset):
                                 'answer': cur_question[qid]['answer']} for qid in cur_question.keys()}
                 self.question.update(cur_question)
         else:
-            self.question = json.load(open(os.path.join(que_dir, mode + '_questions_clean.json')))
+            self.question = json.load(open(os.path.join(que_dir, mode + '_questions.json')))
 
         if 'testdev' not in self.mode and explainable:
             self.explanation = json.load(open(os.path.join(lang_dir, 'converted_explanation_' + mode + '.json')))
