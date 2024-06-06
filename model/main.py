@@ -18,7 +18,7 @@ import logging
 
 from dataloader import Batch_generator, Batch_generator_submission
 from evaluation import organize_eval_data, construct_sentence, Grounding_Evaluator, Attribute_Evaluator, eval_consistency
-from bert_exp import VisualBert_REX, LXMERT_REX, Pro_VCIN
+from model import VisualBert_REX, LXMERT_REX, Pro_VCIN
 from eval_exp import COCOEvalCap
 from lxrt.optimization import BertAdam
 
