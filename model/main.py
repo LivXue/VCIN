@@ -10,7 +10,6 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.nn.utils import clip_grad_norm_
 from tqdm import tqdm
-from collections.abc import Sequence
 
 sys.path.extend(['./util', './model', 'pycocoevalcap'])
 
@@ -19,7 +18,7 @@ from evaluation import (
     organize_eval_data, construct_sentence, Grounding_Evaluator,
     Attribute_Evaluator, eval_consistency
 )
-from model import VisualBert_REX, LXMERT_REX, VCIN, Pro_VCIN
+from model import Pro_VCIN
 from eval_exp import COCOEvalCap
 from lxrt.optimization import BertAdam
 
@@ -33,22 +32,17 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Multi-task learning experiment')
     parser.add_argument('--mode', type=str, default='train', help='Running mode (default: train)')
     parser.add_argument('--anno_dir', type=str, default='./processed_data', help='Directory to annotations')
-    parser.add_argument('--sg_dir', type=str, default='../preprocessing/data/sceneGraphs',
-                        help='Directory to scene graph')
+    parser.add_argument('--sg_dir', type=str, default='../preprocessing/data/sceneGraphs', help='Directory to scene graph')
     parser.add_argument('--ood_dir', type=str, default='./processed_data', help='Directory to annotations')
-    parser.add_argument('--lang_dir', type=str, default='./processed_data',
-                        help='Directory to preprocessed language files')
-    parser.add_argument('--img_dir', type=str, default='../preprocessing/data/extracted_features/features',
-                        help='Directory to image features')
-    parser.add_argument('--bbox_dir', type=str, default='../preprocessing/data/extracted_features/box',
-                        help='Directory to bounding box information')
+    parser.add_argument('--lang_dir', type=str, default='./processed_data', help='Directory to preprocessed language files')
+    parser.add_argument('--img_dir', type=str, default='../preprocessing/data/extracted_features/features', help='Directory to image features')
+    parser.add_argument('--bbox_dir', type=str, default='../preprocessing/data/extracted_features/box', help='Directory to bounding box information')
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints', help='Directory for saving checkpoint')
     parser.add_argument('--weights', type=str, default='', help='Trained model to be loaded (default: None)')
-    parser.add_argument('--epoch', type=int, default=12, help='Maximal number of epochs')
+    parser.add_argument('--epoch', type=int, default=1, help='Maximal number of epochs')
     parser.add_argument('--lr', type=float, default=2e-5, help='Initial learning rate (default: 2e-5)')
     parser.add_argument('--batch_size', type=int, default=256, help='Batch size for training (default: 256)')
-    parser.add_argument('--clip', type=float, default=1.0,
-                        help='Gradient clipping to prevent gradient explode (default: 1.0)')
+    parser.add_argument('--clip', type=float, default=1.0, help='Gradient clipping to prevent gradient explode (default: 1.0)')
     parser.add_argument('--max_qlen', type=int, default=30, help='Maximum length of question')
     parser.add_argument('--max_exp_len', type=int, default=18, help='Maximum length of explanation')
     parser.add_argument('--seq_len', type=int, default=32, help='Sequence length after padding')
@@ -75,12 +69,12 @@ def adjust_learning_rate(init_lr, optimizer, epoch):
         param_group['lr'] = lr
 
 
-def load_ood_data(ood_dir):
+def load_ood_data(ood_dir, split):
     """Load out-of-distribution (OOD) data."""
     ood_data = {}
     for keyword in ['all', 'head', 'tail']:
         try:
-            with open(os.path.join(ood_dir, f'ood_val_{keyword}.json')) as f:
+            with open(os.path.join(ood_dir, f'ood_{split}_{keyword}.json')) as f:
                 ood_data[keyword] = json.load(f)
         except FileNotFoundError:
             logging.error(f"File not found: ood_val_{keyword}.json")
@@ -109,9 +103,6 @@ def initialize_logging():
 
 
 def main():
-    # args = parse_arguments()
-    # configure_environment()
-    # time_identifier = initialize_logging()
     logging.info(args)
 
     try:
@@ -130,7 +121,7 @@ def main():
     trainloader = DataLoader(train_data, batch_size=args.batch_size, drop_last=True, shuffle=True,
                              num_workers=NUM_WORKERS)
     valloader = DataLoader(val_data, batch_size=BATCH_SIZE, drop_last=False, shuffle=False, num_workers=NUM_WORKERS)
-    ood_data = load_ood_data(args.ood_dir)
+    ood_data = load_ood_data(args.ood_dir, split='val')
 
     idx2ans = create_index_mapping(train_data.ans2idx)
     idx2exp = create_index_mapping(train_data.exp2idx)
@@ -166,7 +157,7 @@ def main():
     def evaluate(epoch):
         """Evaluate the model on the validation set."""
         model.eval()
-        total_acc = []
+        total_accs = []
         answers = {}
         exps = {}
         res = []
@@ -192,9 +183,12 @@ def main():
                         gt.append(val_data.explanation[cur_id])
                         exps[cur_id] = pred_exp[idx]
                 ans_score, _ = val_data.eval_qa_score(converted_ans, qid)
-                total_acc.extend(ans_score)
-        total_acc = np.mean(total_acc) * 100
+                total_accs.extend(ans_score)
+        total_acc = np.mean(total_accs) * 100
         logging.info(f"Epoch {epoch} Val Accuracy: {total_acc}")
+        for keyword, ood_scores in ood_data.items():
+            ood_acc = sum(total_accs[idx] for idx, qid in enumerate(qid_list) if qid in ood_scores) / len(ood_scores) * 100
+            logging.info(f'OOD-{keyword} accuracy: {ood_acc:.2f}')
 
         if args.explainable:
             grounding_score, _ = grounding_evaluator.eval_grounding(res, qid_list)
@@ -236,10 +230,6 @@ def main():
 
 def evaluation():
     """Evaluate the model on the test set."""
-    # args = parse_arguments()
-    # configure_environment()
-    # time_identifier = initialize_logging()
-
     test_data = Batch_generator(
         args.img_dir, args.anno_dir, args.lang_dir, args.bbox_dir, 30,
         args.max_exp_len, 32, 'testdev_balanced', explainable=args.explainable
@@ -248,7 +238,7 @@ def evaluation():
 
     ans2idx = test_data.ans2idx
     exp2idx = test_data.exp2idx
-    ood_data = load_ood_data(args.ood_dir)
+    ood_data = load_ood_data(args.ood_dir, split='testdev')
 
     idx2ans = create_index_mapping(ans2idx)
     idx2exp = create_index_mapping(exp2idx)
@@ -266,7 +256,7 @@ def evaluation():
     model.eval()
     answers = {}
     qid_list = []
-    total_acc = []
+    total_accs = []
 
     with torch.no_grad():
         for batch in tqdm(testloader, total=len(testloader)):
@@ -279,12 +269,13 @@ def evaluation():
                 qid_list.append(cur_id)
                 answers[cur_id] = converted_ans[idx]
             ans_score, _ = test_data.eval_qa_score(converted_ans, qid)
-            total_acc.extend(ans_score)
+            total_accs.extend(ans_score)
 
-    total_acc = np.mean(total_acc) * 100
+    total_acc = np.mean(total_accs) * 100
+    logging.info(f'Evaluated on testdev set:')
     logging.info(f'VQA Accuracy: {total_acc:.2f}')
     for keyword, ood_scores in ood_data.items():
-        ood_acc = sum(total_acc[idx] for idx, qid in enumerate(qid_list) if qid in ood_scores) / len(ood_scores)
+        ood_acc = sum(total_accs[idx] for idx, qid in enumerate(qid_list) if qid in ood_scores) / len(ood_scores) * 100
         logging.info(f'OOD-{keyword} accuracy: {ood_acc:.2f}')
     with open(f'answers/answer_testdev_{args.weights.split("/")[-1].split(".")[0]}.json', 'w') as f:
         json.dump(answers, f)
@@ -293,10 +284,6 @@ def evaluation():
 
 def submission():
     """Prepare and save the submission file."""
-    # args = parse_arguments()
-    # configure_environment()
-    # time_identifier = initialize_logging()
-
     test_data = Batch_generator_submission(
         args.img_dir, args.anno_dir, args.lang_dir, args.bbox_dir, 35, mode='submission_all'
     )
