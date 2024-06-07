@@ -19,7 +19,7 @@ from evaluation import (
     organize_eval_data, construct_sentence, Grounding_Evaluator,
     Attribute_Evaluator, eval_consistency
 )
-from model import Pro_VCIN
+from model import VisualBert_REX, LXMERT_REX, VCIN, Pro_VCIN
 from eval_exp import COCOEvalCap
 from lxrt.optimization import BertAdam
 
@@ -28,21 +28,27 @@ SEED = 123
 BATCH_SIZE = 256
 NUM_WORKERS = 6
 
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Multi-task learning experiment')
     parser.add_argument('--mode', type=str, default='train', help='Running mode (default: train)')
     parser.add_argument('--anno_dir', type=str, default='./processed_data', help='Directory to annotations')
-    parser.add_argument('--sg_dir', type=str, default='../preprocessing/data/sceneGraphs', help='Directory to scene graph')
+    parser.add_argument('--sg_dir', type=str, default='../preprocessing/data/sceneGraphs',
+                        help='Directory to scene graph')
     parser.add_argument('--ood_dir', type=str, default='./processed_data', help='Directory to annotations')
-    parser.add_argument('--lang_dir', type=str, default='./processed_data', help='Directory to preprocessed language files')
-    parser.add_argument('--img_dir', type=str, default='../preprocessing/data/extracted_features/features', help='Directory to image features')
-    parser.add_argument('--bbox_dir', type=str, default='../preprocessing/data/extracted_features/box', help='Directory to bounding box information')
+    parser.add_argument('--lang_dir', type=str, default='./processed_data',
+                        help='Directory to preprocessed language files')
+    parser.add_argument('--img_dir', type=str, default='../preprocessing/data/extracted_features/features',
+                        help='Directory to image features')
+    parser.add_argument('--bbox_dir', type=str, default='../preprocessing/data/extracted_features/box',
+                        help='Directory to bounding box information')
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints', help='Directory for saving checkpoint')
     parser.add_argument('--weights', type=str, default='', help='Trained model to be loaded (default: None)')
     parser.add_argument('--epoch', type=int, default=12, help='Maximal number of epochs')
     parser.add_argument('--lr', type=float, default=2e-5, help='Initial learning rate (default: 2e-5)')
     parser.add_argument('--batch_size', type=int, default=256, help='Batch size for training (default: 256)')
-    parser.add_argument('--clip', type=float, default=1.0, help='Gradient clipping to prevent gradient explode (default: 1.0)')
+    parser.add_argument('--clip', type=float, default=1.0,
+                        help='Gradient clipping to prevent gradient explode (default: 1.0)')
     parser.add_argument('--max_qlen', type=int, default=30, help='Maximum length of question')
     parser.add_argument('--max_exp_len', type=int, default=18, help='Maximum length of explanation')
     parser.add_argument('--seq_len', type=int, default=32, help='Sequence length after padding')
@@ -52,6 +58,7 @@ def parse_arguments():
     parser.add_argument('--explainable', type=bool, default=True, help='If generating explanations')
     return parser.parse_args()
 
+
 def configure_environment(seed=SEED):
     """Set random seed for reproducibility and configure CUDA environment."""
     np.random.seed(seed)
@@ -60,11 +67,13 @@ def configure_environment(seed=SEED):
     torch.cuda.manual_seed(seed)
     os.environ['CUDA_VISIBLE_DEVICES'] = '1, 2'
 
+
 def adjust_learning_rate(init_lr, optimizer, epoch):
     """Adaptively adjust the learning rate based on the current epoch."""
     lr = init_lr * (0.25 ** int((epoch + 1) / 8))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
+
 
 def load_ood_data(ood_dir):
     """Load out-of-distribution (OOD) data."""
@@ -77,9 +86,11 @@ def load_ood_data(ood_dir):
             logging.error(f"File not found: ood_val_{keyword}.json")
     return ood_data
 
+
 def create_index_mapping(data):
     """Create a mapping from index to word."""
     return {v: k for k, v in data.items()}
+
 
 def initialize_logging():
     """Initialize logging configuration."""
@@ -96,10 +107,11 @@ def initialize_logging():
     logging.info(f'Saved {log_file_path}!')
     return time_identifier
 
+
 def main():
-    args = parse_arguments()
-    configure_environment()
-    time_identifier = initialize_logging()
+    # args = parse_arguments()
+    # configure_environment()
+    # time_identifier = initialize_logging()
     logging.info(args)
 
     try:
@@ -115,7 +127,8 @@ def main():
         logging.error(f"Error loading data: {e}")
         return
 
-    trainloader = DataLoader(train_data, batch_size=args.batch_size, drop_last=True, shuffle=True, num_workers=NUM_WORKERS)
+    trainloader = DataLoader(train_data, batch_size=args.batch_size, drop_last=True, shuffle=True,
+                             num_workers=NUM_WORKERS)
     valloader = DataLoader(val_data, batch_size=BATCH_SIZE, drop_last=False, shuffle=False, num_workers=NUM_WORKERS)
     ood_data = load_ood_data(args.ood_dir)
 
@@ -141,7 +154,8 @@ def main():
             optimizer.zero_grad()
             loss, _, _ = model(img, box, text_input, token_type, attention_mask, pro, pro_adj, exp=exp,
                                valid_mask=valid_mask, ans=ans, structure_gate=structure_gate)
-            loss.mean().backward()
+            loss = loss.mean()
+            loss.backward()
             clip_grad_norm_(model.parameters(), args.clip)
             optimizer.step()
             loss_history.append(loss.item())
@@ -160,7 +174,7 @@ def main():
         qid_list = []
         with torch.no_grad():
             for batch in tqdm(valloader, total=len(valloader)):
-                batch = [item.to('cuda') for item in batch]
+                batch = [item.to('cuda') if type(item) == torch.Tensor else item for item in batch]
                 img, box, text_input, token_type, attention_mask, qid, pro, pro_adj = batch
                 raw_pred, pred = model(img, box, text_input, token_type, attention_mask, pro, pro_adj)
                 raw_pred = raw_pred.cpu().numpy()
@@ -206,7 +220,8 @@ def main():
         if (epoch + 1) % 1 == 0 or (epoch + 1) == args.epoch:
             cur_score, answers, exps = evaluate(epoch)
             if cur_score > val_score:
-                torch.save(model.module.state_dict(), os.path.join(args.checkpoint_dir, f'model_best_{time_identifier}.pth'))
+                torch.save(model.module.state_dict(),
+                           os.path.join(args.checkpoint_dir, f'model_best_{time_identifier}.pth'))
                 val_score = cur_score
                 cur_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                 with open(f'answers/answer_val_{cur_time}.json', 'w') as f:
@@ -216,12 +231,14 @@ def main():
                     with open(f'explanations/explanation_val_{cur_time}.json', 'w') as f:
                         json.dump(exps, f)
                     logging.info(f'Saved explanation_val_{cur_time}.json!')
+    evaluation()
+
 
 def evaluation():
     """Evaluate the model on the test set."""
-    args = parse_arguments()
-    configure_environment()
-    time_identifier = initialize_logging()
+    # args = parse_arguments()
+    # configure_environment()
+    # time_identifier = initialize_logging()
 
     test_data = Batch_generator(
         args.img_dir, args.anno_dir, args.lang_dir, args.bbox_dir, 30,
@@ -253,7 +270,7 @@ def evaluation():
 
     with torch.no_grad():
         for batch in tqdm(testloader, total=len(testloader)):
-            batch = [item.to('cuda') for item in batch]
+            batch = [item.to('cuda') if type(item) == torch.Tensor else item for item in batch]
             img, box, text_input, token_type, attention_mask, qid, pro, pro_adj = batch
             pred_ans, _ = model(img, box, text_input, token_type, attention_mask, pro, pro_adj)
             pred_ans = pred_ans.cpu().numpy().argmax(-1)
@@ -273,11 +290,12 @@ def evaluation():
         json.dump(answers, f)
     logging.info(f'Saved answer_testdev_{args.weights.split("/")[-1].split(".")[0]}.json!')
 
+
 def submission():
     """Prepare and save the submission file."""
-    args = parse_arguments()
-    configure_environment()
-    time_identifier = initialize_logging()
+    # args = parse_arguments()
+    # configure_environment()
+    # time_identifier = initialize_logging()
 
     test_data = Batch_generator_submission(
         args.img_dir, args.anno_dir, args.lang_dir, args.bbox_dir, 35, mode='submission_all'
@@ -307,6 +325,7 @@ def submission():
 
     with open('./submission/submission.json', 'w') as f:
         json.dump(submission_data, f)
+
 
 if __name__ == '__main__':
     start_time = time.time()
