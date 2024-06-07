@@ -39,7 +39,7 @@ def parse_arguments():
     parser.add_argument('--bbox_dir', type=str, default='../preprocessing/data/extracted_features/box', help='Directory to bounding box information')
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints', help='Directory for saving checkpoint')
     parser.add_argument('--weights', type=str, default='', help='Trained model to be loaded (default: None)')
-    parser.add_argument('--epoch', type=int, default=1, help='Maximal number of epochs')
+    parser.add_argument('--epoch', type=int, default=12, help='Maximal number of epochs')
     parser.add_argument('--lr', type=float, default=2e-5, help='Initial learning rate (default: 2e-5)')
     parser.add_argument('--batch_size', type=int, default=256, help='Batch size for training (default: 256)')
     parser.add_argument('--clip', type=float, default=1.0, help='Gradient clipping to prevent gradient explode (default: 1.0)')
