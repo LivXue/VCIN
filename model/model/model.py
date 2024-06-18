@@ -442,7 +442,7 @@ class Pro_VCIN(nn.Module):
             concat_mask = torch.cat(((1 - attention_mask).float().unsqueeze(1) * (-1e6),
                                      (1 - visual_mask).float().unsqueeze(1) * (-1e6), pro_mask), dim=-1)
             mm_features = torch.cat((que_feat, visual_feat, pro_features), dim=1)
-            pred_pro, pred_output, structure_gates, exp_feature, pred_exp_feature = self.exp_generator(exp, visual_feat, mm_features, pro_mask)
+            pred_pro, pred_output, structure_gates, exp_feature, pred_exp_feature = self.exp_generator(exp, visual_feat, mm_features, concat_mask)
             p_mean, p_var = self.exp_var_feature(exp_feature)
             q_mean, q_var, q_val = self.exp_var_feature(pred_exp_feature, sampling=4)
             ans_feat = torch.concat((cls_feat.unsqueeze(1).expand(-1, q_val.shape[1], -1), q_val), -1)
