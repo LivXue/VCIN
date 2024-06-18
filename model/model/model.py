@@ -350,7 +350,9 @@ class VCIN(nn.Module):
 
     def forward(self, img, box, text_input, token_type, attention_mask, pro=None, pro_adj=None, exp=None, valid_mask=None, ans=None, structure_gate=None):
         visual_mask = torch.ones(len(img), self.num_roi).to(img.device)
-        concat_mask = torch.cat((attention_mask, visual_mask,), dim=1)
+        #concat_mask = torch.cat((attention_mask, visual_mask,), dim=1)
+        concat_mask = torch.cat(((1 - attention_mask).float().unsqueeze(1) * (-1e6), 
+                                 (1 - visual_mask).float().unsqueeze(1) * (-1e6)), dim=-1)
 
         feat_seq, pooled_output, _ = self.bert_encoder(input_ids=text_input, token_type_ids=token_type,
                                                                     attention_mask=attention_mask,
