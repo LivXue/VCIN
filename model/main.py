@@ -41,7 +41,7 @@ def parse_arguments():
     parser.add_argument('--weights', type=str, default='', help='Trained model to be loaded (default: None)')
     parser.add_argument('--epoch', type=int, default=12, help='Maximal number of epochs')
     parser.add_argument('--lr', type=float, default=2e-5, help='Initial learning rate (default: 2e-5)')
-    parser.add_argument('--batch_size', type=int, default=256, help='Batch size for training (default: 256)')
+    parser.add_argument('--batch_size', type=int, default=64, help='Batch size for training (default: 64)')
     parser.add_argument('--clip', type=float, default=1.0, help='Gradient clipping to prevent gradient explode (default: 1.0)')
     parser.add_argument('--max_qlen', type=int, default=30, help='Maximum length of question')
     parser.add_argument('--max_exp_len', type=int, default=18, help='Maximum length of explanation')
