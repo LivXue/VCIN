@@ -1,58 +1,185 @@
+
+<div align="center">
+
 # Integrating Neural-Symbolic Reasoning with Variational Causal Inference Network for Explanatory Visual Question Answering
 
-[Dizhan Xue](https://scholar.google.com/citations?user=V5Aeh_oAAAAJ), [Shengsheng Qian](https://scholar.google.com/citations?user=bPX5POgAAAAJ), and [Changsheng Xu](https://scholar.google.com/citations?user=hI9NRDkAAAAJ).
+[![Status](https://img.shields.io/badge/Status-maintained-brightgreen.svg)](https://github.com/LivXue/VCIN)
+[![GitHub stars](https://img.shields.io/github/stars/LivXue/VCIN?color=yellow&amp;label=Stars)](https://github.com/LivXue/VCIN/stargazers)
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FLivXue%2FVCIN&amp;count_bg=%2379C83D&amp;title_bg=%23555555&amp;icon=&amp;icon_color=%23E7E7E7&amp;title=Hits&amp;edge_flat=false)](https://hits.seeyoufarm.com)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Paper ICCV 2023](https://img.shields.io/badge/Paper-ICCV%202023-red)](https://openaccess.thecvf.com)
+[![Paper TPAMI 2024](https://img.shields.io/badge/Paper-TPAMI%202024-orange)](https://ieeexplore.ieee.org)
 
-**MAIS, Institute of Automation, Chinese Academy of Sciences**
+</div>
 
-![](https://img.shields.io/badge/Status-maintained-brightgreen)
-![GitHub stars](https://img.shields.io/github/stars/LivXue/VCIN?color=yellow&label=Stars)
-[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FLivXue%2FVCIN&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=Hits&edge_flat=false)](https://hits.seeyoufarm.com)
+---
 
+## 📋 Table of Contents
 
-### Data
-1. Download the [GQA Dataset](https://cs.stanford.edu/people/dorarad/gqa/download.html).
-2. Download the [GQA-OOD Dataset](https://github.com/gqa-ood/GQA-OOD)
-3. Download the [bottom-up features](https://github.com/airsplay/lxmert) and unzip it.
-4. Extracting features from the raw tsv files (**Important**: You need to run the code in Linux):
-  ```
-  python ./preprocessing/extract_tsv.py --input $TSV_FILE --output $FEATURE_DIR
-  ```
-5. We provide the annotations of GQA-REX Dataset in `model/processed_data/converted_explanation_train_balanced.json` and `model/processed_data/converted_explanation_val_balanced.json`.
-6. (Optional) You can construct the GQA-REX Dataset by yourself following [instructions by its authors](https://github.com/szzexpoi/rex).
-7. Download our generated programs of the GQA dataset from [Google Drive](https://drive.google.com/drive/folders/1irW8aVOBm0CmOxN6ovVBYlTTQvqn1NLx?usp=sharing).
-8. (Optional) You can generate programs by yourself following [this project](https://github.com/wenhuchen/Meta-Module-Network).
+- [About](#-about)
+- [News](#-news)
+- [Installation](#-installation)
+- [Data Preparation](#-data-preparation)
+- [Models](#-models)
+- [Training &amp; Evaluation](#-training--evaluation)
+- [Results](#-results)
+- [Citation](#-citation)
+- [Contact](#-contact)
 
-### Models
-We provide four models in `model/model/model.py`.
+---
 
-#### Two baselines:
-1. REX-VisualBert is from [this project](https://github.com/szzexpoi/rex).
-2. REX-LXMERT replaces the backbone VisualBert of REX-VisualBert by LXMERT.
+## 🔍 About
 
-#### Two our models (using LXMERT as backbone):
-1. VCIN is proposed in our ICCV 2023 paper "Variational Causal Inference Network for Explanatory Visual Question Answering".
-2. Pro-VCIN is proposed in TPAMI 2024 paper "Integrating Neural-Symbolic Reasoning with Variational Causal Inference Network for Explanatory Visual Question Answering".
+This repository contains the official implementation of two papers:
 
-### Training and Test
-Before training, you need to first generate the dictionary for questions, answers, explanations, and program modules:
-  ```
-  cd ./model
-  python generate_dictionary --question $GQA_ROOT/question --exp $EXP_DIR  --pro $PRO_DIR --save ./processed_data
-  ```
+1. **VCIN** (ICCV 2023): *Variational Causal Inference Network for Explanatory Visual Question Answering*
+2. **Pro-VCIN** (TPAMI 2024): *Integrating Neural-Symbolic Reasoning with Variational Causal Inference Network for Explanatory Visual Question Answering*
 
-The training process can be called as:
-  ```
-  python main.py --mode train --anno_dir $GQA_ROOT/question --ood_dir $OOD_ROOT/data --sg_dir $GQA_ROOT/scene_graph --lang_dir ./processed_data --img_dir $FEATURE_DIR/features --bbox_dir $FEATURE_DIR/box --checkpoint_dir $CHECKPOINT --explainable True
-  ```
-To evaluate on the GQA-testdev set or generating submission file for online evaluation on the test-standard set, call:
-  ```
-  python main.py --mode $MODE --anno_dir $GQA_ROOT/question --ood_dir $OOD_ROOT/data --lang_dir ./processed_data --img_dir $FEATURE_DIR/features --weights $CHECKPOINT/model_best.pth --explainable True
-  ```
-and set `$MODE` to `eval` or `submission` accordingly.
+### Authors
 
-### Reference
-If you find our papers or code helpful, please cite it as below. Thanks!
+[Dizhan Xue](https://scholar.google.com/citations?user=V5Aeh_oAAAAJ), 
+[Shengsheng Qian](https://scholar.google.com/citations?user=bPX5POgAAAAJ), 
+and [Changsheng Xu](https://scholar.google.com/citations?user=hI9NRDkAAAAJ)
+
+### Affiliation
+
+**State Key Laboratory of Multimodal Artificial Intelligence Systems, Institute of Automation, Chinese Academy of Sciences**
+
+---
+
+## 📰 News
+
+- **2024**: Pro-VCIN accepted to TPAMI 2024
+- **2023**: VCIN accepted to ICCV 2023
+
+---
+
+## 💻 Installation
+
+Clone this repository and set up the environment:
+
+```bash
+git clone https://github.com/LivXue/VCIN.git
+cd VCIN
+
+# Create conda environment
+conda env create -f environment.yaml
+conda activate vcin
 ```
+
+---
+
+## 📦 Data Preparation
+
+Follow these steps to prepare the datasets:
+
+### 1. Download Datasets
+
+- **GQA Dataset**: [Download here](https://cs.stanford.edu/people/dorarad/gqa/download.html)
+- **GQA-OOD Dataset**: [Download here](https://github.com/gqa-ood/GQA-OOD)
+
+### 2. Download Features
+
+Download the [bottom-up features](https://github.com/airsplay/lxmert) and unzip them.
+
+### 3. Extract Features
+
+**Important**: You need to run this in Linux:
+
+```bash
+python ./preprocessing/extract_tsv.py --input $TSV_FILE --output $FEATURE_DIR
+```
+
+### 4. GQA-REX Annotations
+
+We provide the annotations of GQA-REX Dataset in:
+- `model/processed_data/converted_explanation_train_balanced.json`
+- `model/processed_data/converted_explanation_val_balanced.json`
+
+*(Optional)* You can construct the GQA-REX Dataset by yourself following [instructions by its authors](https://github.com/szzexpoi/rex).
+
+### 5. Generated Programs
+
+Download our generated programs of the GQA dataset from [Google Drive](https://drive.google.com/drive/folders/1irW8aVOBm0CmOxN6ovVBYlTTQvqn1NLx?usp=sharing).
+
+*(Optional)* You can generate programs by yourself following [this project](https://github.com/wenhuchen/Meta-Module-Network).
+
+---
+
+## 🤖 Models
+
+We provide four models in `model/model/model.py`:
+
+### Baselines
+
+| Model | Description | Backbone |
+|-------|-------------|----------|
+| REX-VisualBert | From [REX project](https://github.com/szzexpoi/rex) | VisualBert |
+| REX-LXMERT | REX-VisualBert with LXMERT backbone | LXMERT |
+
+### Our Methods
+
+| Model | Paper | Backbone |
+|-------|-------|----------|
+| VCIN | ICCV 2023 | LXMERT |
+| Pro-VCIN | TPAMI 2024 | LXMERT |
+
+---
+
+## 🚀 Training &amp; Evaluation
+
+### Step 1: Generate Dictionary
+
+Before training, generate the dictionary for questions, answers, explanations, and program modules:
+
+```bash
+cd ./model
+python generate_dictionary.py --question $GQA_ROOT/question --exp $EXP_DIR --pro $PRO_DIR --save ./processed_data
+```
+
+### Step 2: Training
+
+```bash
+python main.py --mode train \
+    --anno_dir $GQA_ROOT/question \
+    --ood_dir $OOD_ROOT/data \
+    --sg_dir $GQA_ROOT/scene_graph \
+    --lang_dir ./processed_data \
+    --img_dir $FEATURE_DIR/features \
+    --bbox_dir $FEATURE_DIR/box \
+    --checkpoint_dir $CHECKPOINT \
+    --explainable True
+```
+
+### Step 3: Evaluation
+
+To evaluate on GQA-testdev set or generate submission file:
+
+```bash
+python main.py --mode $MODE \
+    --anno_dir $GQA_ROOT/question \
+    --ood_dir $OOD_ROOT/data \
+    --lang_dir ./processed_data \
+    --img_dir $FEATURE_DIR/features \
+    --weights $CHECKPOINT/model_best.pth \
+    --explainable True
+```
+
+Set `$MODE` to `eval` or `submission` accordingly.
+
+---
+
+## 📊 Results
+
+*(Add your results table or figures here)*
+
+---
+
+## 📝 Citation
+
+If you find our papers or code helpful, please cite:
+
+```bibtex
 @inproceedings{xue2023variational,
   title={Variational Causal Inference Network for Explanatory Visual Question Answering},
   author={Xue, Dizhan and Qian, Shengsheng and Xu, Changsheng},
@@ -69,3 +196,20 @@ If you find our papers or code helpful, please cite it as below. Thanks!
   publisher={IEEE}
 }
 ```
+
+---
+
+## 📬 Contact
+
+For questions, please open an issue or contact:
+
+- Dizhan Xue: [xuedizhan17@mails.ucas.ac.cn](mailto:xuedizhan17@mails.ucas.ac.cn)
+
+---
+
+<div align="center">
+
+Made with ❤️ by the VCIN Team
+
+</div>
+
