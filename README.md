@@ -168,12 +168,6 @@ Set `$MODE` to `eval` or `submission` accordingly.
 
 ---
 
-## 📊 Results
-
-*(Add your results table or figures here)*
-
----
-
 ## 📝 Citation
 
 If you find our papers or code helpful, please cite:
