@@ -5,7 +5,6 @@
 
 [![Status](https://img.shields.io/badge/Status-maintained-brightgreen.svg)](https://github.com/LivXue/VCIN)
 [![GitHub stars](https://img.shields.io/github/stars/LivXue/VCIN?color=yellow&amp;label=Stars)](https://github.com/LivXue/VCIN/stargazers)
-[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FLivXue%2FVCIN&amp;count_bg=%2379C83D&amp;title_bg=%23555555&amp;icon=&amp;icon_color=%23E7E7E7&amp;title=Hits&amp;edge_flat=false)](https://hits.seeyoufarm.com)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Paper ICCV 2023](https://img.shields.io/badge/Paper-ICCV%202023-red)](https://openaccess.thecvf.com)
 [![Paper TPAMI 2024](https://img.shields.io/badge/Paper-TPAMI%202024-orange)](https://ieeexplore.ieee.org)
